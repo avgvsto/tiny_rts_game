@@ -2,23 +2,37 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class PlayerManagerScript : MonoBehaviour
 {
-
+    private const int WorldMouseMaxDistance = 100;
     RaycastHit hit;
     List<Transform> selectedPlayerUnits = new List<Transform>();
+    Camera mainCamera;
 
+    // script variables
+    public NavMeshAgent playerAgent;
+    public LayerMask groundLayer;
+
+
+    void Awake() {
+        mainCamera = Camera.main;
+    }
     // Start is called before the first frame update
-    void Start(){}
+    void Start() {}
 
     // Update is called once per frame
     void Update()
     {
 
+        if (Input.GetMouseButtonDown(1)) {
+            moveSelectedUnits(target: getMouseWorldPosition());
+        }
+
         if (!Input.GetMouseButtonDown(0)) { return; }
 
-        var camRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+        var camRay = mainCamera.ScreenPointToRay(Input.mousePosition);
         if (!Physics.Raycast(camRay, out hit)) { return; }
 
         if (hit.transform.CompareTag("PlayerUnit")) {
@@ -52,5 +66,37 @@ public class PlayerManagerScript : MonoBehaviour
 
     private void unhighlightPlayerUnit(Transform playerUnit)
         => playerUnit.Find("PlayerUnitHighlight").gameObject.SetActive(false);
+
+
+    private Vector3 getMouseWorldPosition() {
+
+        Vector2 mouseScreenPosition = Input.mousePosition;
+        Vector3 mouseWorldPosition = mainCamera.ScreenToWorldPoint(mouseScreenPosition);
+        RaycastHit hit;
+
+        Physics.Raycast(
+            origin: mouseWorldPosition,
+            direction: mainCamera.transform.forward,
+            out hit,
+            maxDistance: WorldMouseMaxDistance,
+            layerMask: groundLayer
+        );
+
+        return hit.point;
+
+    }
+
+
+    private void movePlayerUnit(Transform playerUnit, Vector3 target) {
+
+        NavMeshAgent playerUnitNavMesh = playerUnit.gameObject.GetComponent<NavMeshAgent>();
+        playerUnitNavMesh.SetDestination(target);
+
+    }
+
+    private void moveSelectedUnits(Vector3 target) {
+
+        selectedPlayerUnits.ForEach(playerUnit => movePlayerUnit(playerUnit, target));
+    }
 
 }
