@@ -12,7 +12,6 @@ public class PlayerManagerScript : MonoBehaviour
     Camera mainCamera;
 
     // script variables
-    public NavMeshAgent playerAgent;
     public LayerMask groundLayer;
 
 
